@@ -1,17 +1,88 @@
 let stream = null;
 let countdown = 42;
+
+let signalPhase = "GREEN";
+
+let greenDuration = 30;
+let yellowDuration = 5;
+let redDuration = 40;
+
 let chart;
 
 const $ = id => document.getElementById(id);
 
-function tickClock(){
-  const now = new Date();
-  $("clock").textContent = now.toLocaleString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
-  countdown = Math.max(0, countdown - 1);
+
+function updateSignalUI() {
+
+  $("currentSignal").textContent = signalPhase;
   $("remaining").textContent = countdown;
-  if(countdown === 0) countdown = 60;
+
+  const red = document.querySelector(".red-light");
+  const yellow = document.querySelector(".yellow-light");
+  const green = document.querySelector(".green-light");
+
+  red.classList.toggle("active", signalPhase === "RED");
+  yellow.classList.toggle("active", signalPhase === "YELLOW");
+  green.classList.toggle("active", signalPhase === "GREEN");
+
+  $("currentSignal").style.color =
+    signalPhase === "RED" ? "var(--red)" :
+    signalPhase === "YELLOW" ? "var(--amber)" :
+    "var(--green)";
 }
-setInterval(tickClock, 1000); tickClock();
+
+
+function advanceSignal() {
+
+  if (signalPhase === "GREEN") {
+
+    signalPhase = "YELLOW";
+    countdown = yellowDuration;
+
+  } else if (signalPhase === "YELLOW") {
+
+    signalPhase = "RED";
+    countdown = redDuration;
+
+  } else {
+
+    signalPhase = "GREEN";
+    countdown = greenDuration;
+
+  }
+
+  updateSignalUI();
+}
+
+
+function tickClock() {
+
+  const now = new Date();
+
+  $("clock").textContent =
+    now.toLocaleString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+
+  if (countdown > 0) {
+    countdown--;
+  }
+
+  if (countdown <= 0) {
+    advanceSignal();
+  } else {
+    updateSignalUI();
+  }
+}
+
+
+setInterval(tickClock, 1000);
+
+updateSignalUI();
+
+tickClock();
 
 function animateValue(el, value){
   const old = Number(el.textContent) || 0;
@@ -56,9 +127,30 @@ function apply(data){
   $("trafficLevel").textContent=level; $("trafficLevel").className=`traffic-pill ${level.toLowerCase()}`;
   const degrees=Math.round(data.density*3.6);
   document.querySelector(".gauge").style.background=`conic-gradient(var(--cyan) 0deg,var(--cyan) ${degrees}deg,#152a33 ${degrees}deg)`;
-  $("recommendedGreen").textContent=data.signal.recommended_green;
-  $("recommendedRed").textContent=data.signal.recommended_red;
-  $("recommendation").textContent=level==="HIGH"?"Increase Green Signal Time":level==="MEDIUM"?"Balance Green / Red Time":"Maintain Normal Timing";
+  greenDuration = Number(data.signal.recommended_green) || 30;
+
+redDuration = Number(data.signal.recommended_red) || 40;
+
+$("recommendedGreen").textContent = greenDuration;
+
+$("recommendedRed").textContent = redDuration;
+
+if (signalPhase === "GREEN" && countdown > greenDuration) {
+  countdown = greenDuration;
+}
+
+if (signalPhase === "RED" && countdown > redDuration) {
+  countdown = redDuration;
+}
+
+updateSignalUI();
+
+$("recommendation").textContent =
+  level === "HIGH"
+    ? "Increase Green Signal Time"
+    : level === "MEDIUM"
+    ? "Balance Green / Red Time"
+    : "Maintain Normal Timing";
   setIncident(data.accident || {detected:false});
   $("csvLink").href=`/api/analytics.csv?city=${encodeURIComponent(data.city)}`;
 }
