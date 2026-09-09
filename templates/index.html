@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Smart Traffic System</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AI</div>
+      <div><div class="eyebrow">SMART CITY OPERATIONS</div><h1>AI SMART TRAFFIC SYSTEM</h1></div>
+    </div>
+    <div class="top-controls">
+      <div class="clock"><span class="live-dot"></span><span id="clock">--:--:--</span></div>
+      <select id="city">
+        {% for city in cities %}<option>{{ city }}</option>{% endfor %}
+      </select>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <section class="hero-grid">
+      <div class="panel camera-panel">
+        <div class="panel-head"><div><span class="eyebrow">LIVE CAMERA</span><h2>Traffic Junction Feed</h2></div><span id="detectStatus" class="badge green">READY</span></div>
+        <div class="camera">
+          <div class="scanline"></div>
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <div class="camera-icon">◉</div>
+            <strong>CAMERA OFFLINE / DEMO FEED</strong>
+            <span>Start browser camera or upload media for AI processing</span>
+          </div>
+          <video id="webcam" autoplay muted playsinline></video>
+          <img id="processedImage" alt="Processed traffic image">
+          <video id="processedVideo" controls></video>
+          <div class="cam-overlay"><span>● LIVE ANALYTICS</span><span id="fps">FPS --</span></div>
+        </div>
+        <div class="actions">
+          <button id="startCam" class="btn primary">▶ Start Camera</button>
+          <button id="stopCam" class="btn">■ Stop Camera</button>
+          <label class="btn">▣ Upload Video<input id="videoInput" type="file" accept="video/*" hidden></label>
+          <label class="btn">▧ Upload Image<input id="imageInput" type="file" accept="image/*" hidden></label>
+        </div>
+        <div id="uploadProgress" class="progress-wrap hidden"><div class="progress"><span id="progressBar"></span></div><small id="progressText">Processing...</small></div>
+      </div>
+
+      <div class="panel status-panel">
+        <div class="panel-head"><div><span class="eyebrow">SYSTEM STATUS</span><h2>Operations Overview</h2></div><span class="badge green">ONLINE</span></div>
+        <div class="city-card"><span>MONITORED CITY</span><strong id="cityName">Riyadh</strong><small id="junction">King Fahd Road / Road Junction A</small></div>
+        <div class="metric-row"><span>Detection Engine</span><strong id="engine">DEMO</strong></div>
+        <div class="metric-row"><span>Monitoring Mode</span><strong>REAL-TIME</strong></div>
+        <div class="metric-row"><span>Data Stream</span><strong class="success">ACTIVE</strong></div>
+        <div class="alert-note">Emergency responses shown here are <b>simulated demo alerts</b>; this prototype does not contact real services.</div>
+      </div>
+    </section>
+
+    <section class="metrics-grid">
+      <div class="metric-card"><span class="metric-icon">🚗</span><span class="eyebrow">TOTAL VEHICLES</span><strong id="total" data-value="0">0</strong><small>Detected in current frame</small></div>
+      <div class="metric-card"><span class="metric-icon">🚕</span><span class="eyebrow">CARS</span><strong id="cars">0</strong><small>Passenger vehicles</small></div>
+      <div class="metric-card"><span class="metric-icon">🚌</span><span class="eyebrow">BUSES</span><strong id="buses">0</strong><small>Public transport</small></div>
+      <div class="metric-card"><span class="metric-icon">🚚</span><span class="eyebrow">TRUCKS</span><strong id="trucks">0</strong><small>Heavy vehicles</small></div>
+      <div class="metric-card"><span class="metric-icon">🏍</span><span class="eyebrow">MOTORCYCLES</span><strong id="motorcycles">0</strong><small>Two-wheelers</small></div>
+    </section>
+
+    <section class="grid-3">
+      <div class="panel density-panel">
+        <div class="panel-head"><div><span class="eyebrow">TRAFFIC DENSITY</span><h2>Road Load</h2></div><span id="trafficLevel" class="traffic-pill high">HIGH</span></div>
+        <div class="gauge"><div class="gauge-inner"><strong id="density">78%</strong><span>ROAD CAPACITY</span></div></div>
+        <div class="density-bar"><span id="densityBar"></span></div>
+        <div class="scale"><span>LOW</span><span>MEDIUM</span><span>HIGH</span></div>
+        <p class="muted">Calculated as detected vehicles ÷ estimated road capacity × 100.</p>
+      </div>
+
+      <div id="accidentCard" class="panel accident-panel">
+        <div class="panel-head"><div><span class="eyebrow">AI INCIDENT MONITOR</span><h2>Accident Detection</h2></div><span id="accidentBadge" class="badge green">CLEAR</span></div>
+        <div id="accidentState" class="incident-state clear"><span>✓</span><div><strong>No Accident Detected</strong><small>AI scene analysis active</small></div></div>
+        <div class="detail-grid">
+          <div><span>CONFIDENCE</span><strong id="confidence">0%</strong></div>
+          <div><span>LOCATION</span><strong id="accidentLocation">Road Junction A</strong></div>
+          <div><span>DETECTION TIME</span><strong id="accidentTime">--:--</strong></div>
+          <div><span>ALERT</span><strong id="alertStatus">STANDBY</strong></div>
+        </div>
+      </div>
+
+      <div class="panel emergency-panel">
+        <div class="panel-head"><div><span class="eyebrow">RESPONSE CENTER</span><h2>Emergency Alerts</h2></div><span class="badge amber">SIMULATED</span></div>
+        <div class="response-list">
+          <div><span>🚑 Ambulance Alert</span><strong id="ambulance">STANDBY</strong></div>
+          <div><span>👮 Traffic Police</span><strong id="police">STANDBY</strong></div>
+          <div><span>🚨 Emergency Response</span><strong id="response">STANDBY</strong></div>
+        </div>
+        <button id="testAlert" class="btn warning">⚠ Simulate Incident</button>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel signal-panel">
+        <div class="panel-head"><div><span class="eyebrow">ADAPTIVE CONTROL</span><h2>Smart Traffic Signal</h2></div><span class="badge cyan">AI RECOMMENDATION</span></div>
+        <div class="signal-layout">
+          <div class="traffic-light">
+            <span class="red-light"></span><span class="yellow-light"></span><span class="green-light active"></span>
+          </div>
+          <div class="signal-info">
+            <div><span>CURRENT SIGNAL</span><strong id="currentSignal">GREEN</strong></div>
+            <div><span>REMAINING TIME</span><strong><b id="remaining">42</b> SEC</strong></div>
+            <div><span>RECOMMENDED GREEN</span><strong><b id="recommendedGreen">60</b> SEC</strong></div>
+            <div><span>RECOMMENDED RED</span><strong><b id="recommendedRed">20</b> SEC</strong></div>
+          </div>
+        </div>
+        <div class="recommendation"><span>AI Recommendation</span><strong id="recommendation">Increase Green Signal Time</strong></div>
+      </div>
+
+      <div class="panel analytics-panel">
+        <div class="panel-head"><div><span class="eyebrow">TRAFFIC ANALYTICS</span><h2>Live Vehicle Trend</h2></div><a id="csvLink" class="btn small" href="/api/analytics.csv?city=Riyadh">Export CSV</a></div>
+        <canvas id="trafficChart"></canvas>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
