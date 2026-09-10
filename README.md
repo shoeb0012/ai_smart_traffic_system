@@ -1,4 +1,5 @@
-# AI-Based Smart Traffic Management and Real-Time Accident Detection System
+# AI-Based Real-Time Accident Detection System
+
 
 A runnable Flask + OpenCV + YOLO smart-city traffic dashboard designed for demonstration/prototyping in Dubai, Riyadh, Kuwait City, Doha, Muscat and Manama.
 
